@@ -1,0 +1,10 @@
+[Unit]
+Description=Run dipbuy daily at 00:05 UTC
+
+[Timer]
+OnCalendar=*-*-* 00:05:00 UTC
+# server was off at 00:05: run at boot instead
+Persistent=true
+
+[Install]
+WantedBy=timers.target

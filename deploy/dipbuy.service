@@ -1,0 +1,31 @@
+# Install (as root, from the dipbuy folder):
+#   install -D -m 644 bot.py /opt/dipbuy/bot.py
+#   install -m 600 deploy/dipbuy.env.example /etc/dipbuy.env     # then fill in the token and chat id
+#   cp deploy/dipbuy.service deploy/dipbuy.timer /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now dipbuy.timer
+#   systemctl start dipbuy.service        # one run now: you should get a Telegram message
+#   journalctl -u dipbuy                  # logs;  systemctl list-timers dipbuy.timer = next run
+# State (paper_state.json) lives in /var/lib/dipbuy (really /var/lib/private/dipbuy).
+[Unit]
+Description=dipbuy daily dip-buy bot (paper trading + Telegram alerts)
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=2h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/dipbuy/bot.py
+EnvironmentFile=/etc/dipbuy.env
+# retry when Binance or Telegram is briefly down; at most 3 runs in 2h
+Restart=on-failure
+RestartSec=15min
+# throwaway user, writable only /var/lib/dipbuy; the code and the rest of the system are read-only to it
+DynamicUser=yes
+StateDirectory=dipbuy
+CapabilityBoundingSet=
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
